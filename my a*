@@ -1,0 +1,40 @@
+import numpy as np
+from random import  random
+
+
+class Node(object):
+    def __init__(self, parent=None, position=None, value=None):
+        self.parent = parent
+        self.position = position
+        self.value = value
+
+        self.f = 0
+        self.g = 0
+        self.h = 0
+
+
+def make_maze(x: int, y: int, wall_chance: float):
+    maze = np.zeros((x, y))  # initialising array
+
+    # adding nodes to the array
+    for i in range(len(maze)):
+        for j in range(len(maze[i])):
+            maze[i, j] = -1 * int(random() < wall_chance)
+
+    maze[0, 0] = 1
+    maze[-1, -1] = 2
+
+    return maze
+
+
+maze = make_maze(x=10, y=10, wall_chance=0.1)
+
+print(maze)
+
+
+def a_star(maze, starting_node):
+    opened = [starting_node]
+    closed = []
+
+    while len(opened) > 0:
+
