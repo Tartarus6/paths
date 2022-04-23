@@ -55,7 +55,6 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     def heuristic(current_position, end_position):  # estimates the cost to reach goal from the node at the given position
         # non-resilient
         
-        
         # get average value of a node
         unzipped_maze = list(unzip(maze))
         average_value = sum(list(unzipped_maze)) / len(unzipped_maze)
