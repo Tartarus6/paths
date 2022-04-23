@@ -7,6 +7,10 @@ from matplotlib.animation import FuncAnimation
 # note: the value of a node is the cost that it takes to get there, so lower cost is better
 # node: any code with "# non-resilient", and probably some more, will need to be changed for any major change in the pathfinding such as adding walls or changing the maze shape
 
+
+# written based off of the pseudocode at "https://en.wikipedia.org/wiki/A*_search_algorithm"
+
+
 def grid_print(grid):  # non-resilient
     for i in grid:
         print(i)
@@ -39,8 +43,15 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     # maze start and end can't be walls
     maze[starting_position[0]][starting_position[1]] = 10
     maze[goal_position[0]][goal_position[1]] = 10
-
     
+    
+    class Output:
+        def __init__(self, maze=None, path=None, failed=False):
+            self.maze = maze
+            self.path = path
+            self.failed = failed
+            
+
     def heuristic(current_position, end_position):  # estimates the cost to reach goal from the node at the given position
         # non-resilient
         
@@ -123,7 +134,7 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
         current_node = min(ToDo, key=heuristic_dict.get)  # get the position with the lowest heuristic value that's in the ToDo list
 
         if current_node == goal_position:  # if the current node is the destination, end
-            return reconstruct_path(came_from=came_from, current=current_node), maze
+            return Output(path=reconstruct_path(came_from=came_from, current=current_node), maze=maze)
 
         ToDo.remove(current_node)  # node has been "explored", so remove it from the ToDo list
 
@@ -145,38 +156,49 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
                     ToDo.append(neighbor)
     
     
-    return "FAILED!!!     Change this to something better later", maze
-
-    """Note: Change this to something better later"""
+    return Output(failed=True)
 
 
 def animate_path(maze, path):
     if type(path) == str:  # that being a string indicates that the algorithm failed to find a path
         return
     
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots()  # initialising plot
     
-    display_array = numpy.array(maze)
+    display_array = numpy.array(maze)  # the array for display on 'ax'
+    for position in path:  # for every position on the path from the start position to the goal position
+        display_array[position[0], position[1]] = -50  # replace the value in the array with 5 (makes it appear teal on the table)
+    graph = plt.imshow(display_array)  # add the array to the window
+    
+    plt.show()  # show the window
+
+
+def calculate_path_cost(maze, path):
+    # non-resilient
+    total_cost = 0
     for position in path:
-        display_array[position[0], position[1]] = 5
-    graph = plt.imshow(display_array)
-    
-    plt.show()
+        total_cost += maze[position[0]][position[1]]
+    return total_cost
 
 
 start = time()
 
 
-maze = make_maze(x=50, y=50, value_range=(10, 10), wall_rate=0.3)
+maze = make_maze(x=50, y=50, value_range=(1, 100), wall_rate=0)
 
 
 output = a_star(maze=maze, starting_position=(0, 0), goal_position=(len(maze)-1, len(maze[0])-1))  # non-resilient
-print(f"path: {output[0]}")
+print(f"path: {output.path}")
 print("grid:")
-grid_print(output[1])
+grid_print(output.maze)
 
 elapsed = time() - start
 
 print(f"elapsed: {elapsed}s")
 
-animate_path(maze=output[1], path=output[0])
+print(f"path cost: {calculate_path_cost(output.maze, output.path)}")
+
+if not output.failed:
+    animate_path(maze=output.maze, path=output.path)
+else:
+    print("Pathfinding failed :(")
