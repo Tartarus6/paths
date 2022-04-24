@@ -1,23 +1,27 @@
-import numpy as np
+import numpy
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-fig, ax = plt.subplots()
 
-x = np.arange(0, 2*np.pi, 0.01)
-line, = ax.plot(x, np.sin(x))
+fig, ax = plt.subplots()  # initialising plot
+
+maze = [[10, 10, 10, 10, 10, 10],
+        [10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, -1, 10],
+        [10, -1, -1, -1, -1, 10],
+        [10, 10, 10, 10, 10, 10]]
+
+display_array = numpy.array(maze)
+
+graph = plt.imshow(display_array)  # add the array to the window
 
 
 def animate(i):
-    line.set_ydata(np.sin(x + i/10.0))  # update the data
-    return line,
+    display_array[1, 1] = display_array[1, 1] + 1
+    graph.set_data(display_array)
+    return fig
 
 
-# Init only required for blitting to give a clean slate.
-def init():
-    line.set_ydata(np.ma.array(x, mask=True))
-    return line,
-
-
-ani = animation.FuncAnimation(fig, animate, np.arange(1, 200), init_func=init, interval=25, blit=True)
+ani = animation.FuncAnimation(fig, animate, frames=100, interval=25)
 plt.show()

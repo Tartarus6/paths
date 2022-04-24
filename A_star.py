@@ -46,10 +46,15 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     
     
     class Output:
-        def __init__(self, maze=None, path=None, failed=False):
+        def __init__(self, maze=None, final_path=None, failed=False, to_do_history=None, explored_history=None, path_history=None):
+            if to_do_history is None:
+                to_do_history = []
             self.maze = maze
-            self.path = path
+            self.path = final_path
             self.failed = failed
+            self.to_do_history = to_do_history
+            self.explored_history = explored_history
+            self.path_history = path_history
             
 
     def heuristic(current_position, end_position):  # estimates the cost to reach goal from the node at the given position
@@ -76,7 +81,7 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
                     continue
                 if (position[0] + i < 0) or (position[1] + j < 0) or (position[0] + i >= len(maze)) or (position[1] + j >= len(maze[i])):  # makes it so that the output won't be outside the maze
                     continue
-                if (get_value((position[0] + i, position[1] + j)) == -1):  # if the neighbor is a wall
+                if get_value((position[0] + i, position[1] + j)) == -1:  # if the neighbor is a wall
                     continue
 
                 output.append((position[0] + i, position[1] + j))
@@ -91,7 +96,19 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     infinity = float('inf')  # useful for making future code more readable
     
     # list of Nodes that need to be explored
-    ToDo = [starting_position]
+    to_do = [starting_position]
+    
+    # the complete history of the to_do list, not used in algorithm, just for visual output
+    to_do_history = []
+    
+    # list of nodes that have been taken off of the to_do list, not used in algorithm, just for visual output
+    explored = []
+
+    # the complete history of the explored list, not used in algorithm, just for visual output
+    explored_history = []
+
+    # list of the paths taken to explore nodes, not used in algorithm, just for visual output
+    path_history = []
     
     # gScore[n] on wiklipedia will be shortest_path_cost[n] on here
     shortest_path_cost = {}
@@ -128,31 +145,32 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
             path.insert(0, current)
         return path
 
-    while len(ToDo) > 0:  # while there are still ToDo nodes
-        value_dict = {pos: maze[pos[0]][pos[1]] for pos in ToDo}  # the values of each position on the ToDo list
-        current_node = min(ToDo, key=heuristic_dict.get)  # get the position with the lowest heuristic value that's in the ToDo list
+    while len(to_do) > 0:  # while there are still to_do nodes
+        value_dict = {pos: maze[pos[0]][pos[1]] for pos in to_do}  # the values of each position on the to_do list
+        current_node = min(to_do, key=heuristic_dict.get)  # get the position with the lowest heuristic value that's in the to_do list
 
         if current_node == goal_position:  # if the current node is the destination, end
-            return Output(path=reconstruct_path(came_from=came_from, current=current_node), maze=maze)
+            return Output(final_path=reconstruct_path(came_from=came_from, current=current_node), maze=maze, to_do_history=to_do_history, explored_history=explored_history, path_history=path_history)
 
-        ToDo.remove(current_node)  # node has been "explored", so remove it from the ToDo list
+        to_do.remove(current_node)  # node has been "explored", so remove it from the to_do list
+        explored.append(current_node)  # node has been "explored", so add it to the explored list
+        
+        to_do_history.append(list(to_do))  # add the current to_do list to the to_do_history list, the list function is run so that the element in to_do_history won't update when to_do updates
+        explored_history.append(list(to_do))  # add the current explored list to the explored_history list, the list function is run so that the element in explored_history won't update when explored updates
+        path_history.append(reconstruct_path(came_from=came_from, current=current_node))  # adds the path taken to the current node to path_history
 
         for neighbor in neighbors(current_node):
             # tentative_shortest_path_cost is the distance from start to the neighbor through current
             
-            try:
-                tentative_shortest_path_cost = shortest_path_cost[current_node] + get_value(neighbor)
-            except IndexError as e:
-                print(f"error: {e} \ncurrent node: {current_node} \nneighbor node: {neighbor}")
-
+            tentative_shortest_path_cost = shortest_path_cost[current_node] + get_value(neighbor)
             if tentative_shortest_path_cost < shortest_path_cost[neighbor]:  # if the new path to neighbor is the shortest path to neighbor
                 came_from[neighbor] = current_node
 
                 shortest_path_cost[neighbor] = tentative_shortest_path_cost
                 heuristic_dict[neighbor] = tentative_shortest_path_cost + heuristic(neighbor, goal_position)
                 
-                if neighbor not in ToDo:
-                    ToDo.append(neighbor)
+                if neighbor not in to_do:
+                    to_do.append(neighbor)
     
     
     return Output(failed=True)
@@ -166,7 +184,7 @@ def animate_path(maze, path):
     
     display_array = numpy.array(maze)  # the array for display on 'ax'
     for position in path:  # for every position on the path from the start position to the goal position
-        display_array[position[0], position[1]] = -50  # replace the value in the array with 5 (makes it appear teal on the table)
+        display_array[position[0], position[1]] = -5  # replace the value in the array with 5 (makes it appear teal on the table)
     graph = plt.imshow(display_array)  # add the array to the window
     
     plt.show()  # show the window
@@ -183,21 +201,32 @@ def calculate_path_cost(maze, path):
 start = time()
 
 
-maze = make_maze(x=50, y=50, value_range=(1, 100), wall_rate=0)
+maze = make_maze(x=10, y=10, value_range=(10, 10), wall_rate=0.3)
+
+maze = [[10, 10, 10, 10, 10, 10],
+        [10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, -1, 10],
+        [10, -1, -1, -1, -1, 10],
+        [10, 10, 10, 10, 10, 10]]
 
 
 output = a_star(maze=maze, starting_position=(0, 0), goal_position=(len(maze)-1, len(maze[0])-1))  # non-resilient
-print(f"path: {output.path}")
-print("grid:")
-grid_print(output.maze)
 
 elapsed = time() - start
 
-print(f"elapsed: {elapsed}s")
 
-print(f"path cost: {calculate_path_cost(output.maze, output.path)}")
 
 if not output.failed:
+    print(f"path: {output.path}")
+    print("grid:")
+    grid_print(output.maze)
+
+    print(f"elapsed: {elapsed}s")
+
+    print(f"path cost: {calculate_path_cost(output.maze, output.path)}")
+    
+    
     animate_path(maze=output.maze, path=output.path)
 else:
     print("Pathfinding failed :(")
