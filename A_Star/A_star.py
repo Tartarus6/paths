@@ -212,10 +212,9 @@ def animate_path(show_final_path_frames: int, maze: list, final_path: list, path
             
             # save frame
             if save_files:
-                if not os.path.exists(f"gif_folder/frame_{i}.jpg"):
-                    plt.savefig(f"gif_folder/frame_{i}.jpg")
+                plt.savefig(f"gif_folder/frame_{i}.jpg")
                 if i == len(path_history) + show_final_path_frames - 1:  # if it's on the final frame of the animation
-                    make_gif("gif_folder", fps=fps)
+                    make_gif("gif_folder", fps=fps, num_frames=i+1)
             return fig
             
         
@@ -233,8 +232,7 @@ def animate_path(show_final_path_frames: int, maze: list, final_path: list, path
         
         # save frame
         if save_files:
-            if not os.path.exists(f"gif_folder/frame_{i}.jpg"):
-                plt.savefig(f"gif_folder/frame_{i}.jpg")
+            plt.savefig(f"gif_folder/frame_{i}.jpg")
         return fig
     
 
@@ -250,28 +248,17 @@ def calculate_path_cost(maze, path):
     return total_cost
 
 
-
-
-"""maze = [[10, 10, 10, 10, 10, 10, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, -1, -1, -1, -1, -1, 10],
-        [10, 10, 10, 10, 10, 10, 10]]"""
-
-
 # arguments ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-maze_x = 10
-maze_y = 10
+maze_x = 7
+maze_y = 7
 maze_value_range = (10, 10)
 maze_wall_rate = 0.4
 
 starting_position = (0, 0)
 goal_position = (maze_y-1, maze_x-1)
 
-animation_save_files = False
+animation_save_files = True
 animation_show_final_path_frames = 10
 animation_fps = 5
 
@@ -282,6 +269,15 @@ start = time()
 
 
 maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate)
+
+
+maze = [[10, 10, 10, 10, 10, 10, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, -1, -1, -1, -1, -1, 10],
+        [10, 10, 10, 10, 10, 10, 10]]
 
 
 output = a_star(maze=maze, starting_position=starting_position, goal_position=goal_position)  # non-resilient

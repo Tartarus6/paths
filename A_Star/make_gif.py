@@ -3,13 +3,13 @@ from PIL import Image
 import imageio
 
 
-def make_gif(frame_folder, fps):
+def make_gif(frame_folder, fps, num_frames):
 	print("gif")
 	
 	giffile = 'gif.gif'
 	
 	images_data = []
-	for i in range(43):
+	for i in range(num_frames):
 		data = imageio.imread(f'gif_folder/frame_{i}.jpg')
 		images_data.append(data)
 	
