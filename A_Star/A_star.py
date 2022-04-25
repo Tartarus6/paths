@@ -5,7 +5,7 @@ from time import time, sleep
 from matplotlib.animation import FuncAnimation
 # note: "node" refers to a position on the maze
 # note: the value of a node is the cost that it takes to get there, so lower cost is better
-# node: any code with "# non-resilient", and probably some more, will need to be changed for any major change in the pathfinding such as adding walls or changing the maze shape
+# note: any code with "# non-resilient", and probably some more, will need to be changed for any major change in the pathfinding such as adding walls or changing the maze shape
 
 
 # written based off of the pseudocode at "https://en.wikipedia.org/wiki/A*_search_algorithm"
