@@ -1,7 +1,7 @@
 import numpy
 from random import random, randint
 import matplotlib.pyplot as plt
-from time import time
+from time import time, sleep
 from matplotlib.animation import FuncAnimation
 # note: "node" refers to a position on the maze
 # note: the value of a node is the cost that it takes to get there, so lower cost is better
@@ -46,15 +46,15 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     
     
     class Output:
-        def __init__(self, maze=None, final_path=None, failed=False, to_do_history=None, explored_history=None, path_history=None):
+        def __init__(self, maze=None, final_path=None, failed=False, to_do_history=None, path_history=None, explored_history=None):
             if to_do_history is None:
                 to_do_history = []
             self.maze = maze
-            self.path = final_path
+            self.final_path = final_path
             self.failed = failed
             self.to_do_history = to_do_history
-            self.explored_history = explored_history
             self.path_history = path_history
+            self.explored_history = explored_history
             
 
     def heuristic(current_position, end_position):  # estimates the cost to reach goal from the node at the given position
@@ -100,13 +100,13 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     
     # the complete history of the to_do list, not used in algorithm, just for visual output
     to_do_history = []
-    
-    # list of nodes that have been taken off of the to_do list, not used in algorithm, just for visual output
-    explored = []
+
+    # list of Nodes that have been explored
+    explored = [starting_position]
 
     # the complete history of the explored list, not used in algorithm, just for visual output
     explored_history = []
-
+    
     # list of the paths taken to explore nodes, not used in algorithm, just for visual output
     path_history = []
     
@@ -148,16 +148,18 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     while len(to_do) > 0:  # while there are still to_do nodes
         value_dict = {pos: maze[pos[0]][pos[1]] for pos in to_do}  # the values of each position on the to_do list
         current_node = min(to_do, key=heuristic_dict.get)  # get the position with the lowest heuristic value that's in the to_do list
+        
+        
 
         if current_node == goal_position:  # if the current node is the destination, end
-            return Output(final_path=reconstruct_path(came_from=came_from, current=current_node), maze=maze, to_do_history=to_do_history, explored_history=explored_history, path_history=path_history)
+            return Output(final_path=reconstruct_path(came_from=came_from, current=current_node), maze=maze, to_do_history=to_do_history, path_history=path_history, explored_history=explored_history)
 
         to_do.remove(current_node)  # node has been "explored", so remove it from the to_do list
-        explored.append(current_node)  # node has been "explored", so add it to the explored list
+        explored.append(current_node)
         
         to_do_history.append(list(to_do))  # add the current to_do list to the to_do_history list, the list function is run so that the element in to_do_history won't update when to_do updates
-        explored_history.append(list(to_do))  # add the current explored list to the explored_history list, the list function is run so that the element in explored_history won't update when explored updates
         path_history.append(reconstruct_path(came_from=came_from, current=current_node))  # adds the path taken to the current node to path_history
+        explored_history.append(list(explored))
 
         for neighbor in neighbors(current_node):
             # tentative_shortest_path_cost is the distance from start to the neighbor through current
@@ -176,18 +178,68 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     return Output(failed=True)
 
 
-def animate_path(maze, path):
-    if type(path) == str:  # that being a string indicates that the algorithm failed to find a path
-        return
+def animate_path(show_final_path_frames: int, maze: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False):
+    if type(final_path) == str:  # if final_path is a string
+        return  # that being a string indicates that the algorithm failed to find a path, exit the function
     
+    if len(path_history) != len(to_do_history):  # if the lengths of ant of the history lists are different
+        return  # something went wrong, just exit
+    
+    if save_files:
+        import os
+        from make_gif import make_gif
+
     fig, ax = plt.subplots()  # initialising plot
-    
-    display_array = numpy.array(maze)  # the array for display on 'ax'
-    for position in path:  # for every position on the path from the start position to the goal position
-        display_array[position[0], position[1]] = -5  # replace the value in the array with 5 (makes it appear teal on the table)
+
+    display_array = numpy.array(maze)
+
     graph = plt.imshow(display_array)  # add the array to the window
     
-    plt.show()  # show the window
+    show_final_path_frame = 0
+    
+    def animate(i):
+        display_array = numpy.array(maze)  # reset display_array
+
+        if i >= len(path_history):  # if it's on the last frame of the animation
+            # show the final path
+            for node in final_path:  # for each node in the final path
+                display_array[node] = 7
+            # hold the animation on the last frame so that the final path is visible
+            pass
+            
+
+            graph.set_data(display_array)
+            
+            # save frame
+            if save_files:
+                if not os.path.exists(f"gif_folder/frame_{i}.jpg"):
+                    plt.savefig(f"gif_folder/frame_{i}.jpg")
+                if i == len(path_history) + show_final_path_frames - 1:  # if it's on the final frame of the animation
+                    make_gif("gif_folder", fps=fps)
+            return fig
+            
+        
+        # pos = (1, 1)
+        # display_array[pos] = display_array[pos] - 1
+        for node in explored_history[i]:  # for each explored node on the frame 'i'
+            display_array[node] = 3
+        for node in to_do_history[i]:  # for each node in to_do on frame 'i'
+            display_array[node] = 5
+        for node in path_history[i]:  # for each node in the path of frame 'i'
+            display_array[node] = 7
+        
+        
+        graph.set_data(display_array)
+        
+        # save frame
+        if save_files:
+            if not os.path.exists(f"gif_folder/frame_{i}.jpg"):
+                plt.savefig(f"gif_folder/frame_{i}.jpg")
+        return fig
+    
+
+    ani = FuncAnimation(fig, animate, frames=len(path_history) + show_final_path_frames, interval=1000//fps)
+    plt.show()
 
 
 def calculate_path_cost(maze, path):
@@ -198,35 +250,49 @@ def calculate_path_cost(maze, path):
     return total_cost
 
 
+
+
+"""maze = [[10, 10, 10, 10, 10, 10, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, 10, 10, 10, 10, -1, 10],
+        [10, -1, -1, -1, -1, -1, 10],
+        [10, 10, 10, 10, 10, 10, 10]]"""
+
+
+# arguments ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+
+maze_x = 10
+maze_y = 10
+maze_value_range = (10, 10)
+maze_wall_rate = 0.4
+
+starting_position = (0, 0)
+goal_position = (maze_y-1, maze_x-1)
+
+animation_save_files = False
+animation_show_final_path_frames = 10
+animation_fps = 5
+
+# arguments ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+
+
 start = time()
 
 
-maze = make_maze(x=10, y=10, value_range=(10, 10), wall_rate=0.3)
-
-maze = [[10, 10, 10, 10, 10, 10],
-        [10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, -1, 10],
-        [10, -1, -1, -1, -1, 10],
-        [10, 10, 10, 10, 10, 10]]
+maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate)
 
 
-output = a_star(maze=maze, starting_position=(0, 0), goal_position=(len(maze)-1, len(maze[0])-1))  # non-resilient
+output = a_star(maze=maze, starting_position=starting_position, goal_position=goal_position)  # non-resilient
 
 elapsed = time() - start
 
 
 
 if not output.failed:
-    print(f"path: {output.path}")
-    print("grid:")
-    grid_print(output.maze)
-
     print(f"elapsed: {elapsed}s")
-
-    print(f"path cost: {calculate_path_cost(output.maze, output.path)}")
     
-    
-    animate_path(maze=output.maze, path=output.path)
+    animate_path(maze=output.maze, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps)
 else:
     print("Pathfinding failed :(")

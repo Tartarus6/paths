@@ -18,10 +18,11 @@ graph = plt.imshow(display_array)  # add the array to the window
 
 
 def animate(i):
-    display_array[1, 1] = display_array[1, 1] + 1
+    pos = (1, 1)
+    display_array[pos] = display_array[pos] - 1
     graph.set_data(display_array)
     return fig
 
 
-ani = animation.FuncAnimation(fig, animate, frames=100, interval=25)
+ani = animation.FuncAnimation(fig, animate, frames=100, interval=50)
 plt.show()
