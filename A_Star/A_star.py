@@ -24,13 +24,13 @@ def unzip(lst):  # yields the contents of the input list, removing nested lists.
             yield i
 
 
-def make_maze(x: int, y: int, value_range: tuple, wall_rate: float):
+def make_maze(x: int, y: int, value_range: int, wall_rate: float):
     maze = [[0 for i in range(x)] for j in range(y)]  # initialising array of zeros
 
     # adding values to the array
     for i in range(len(maze)):
         for j in range(len(maze[i])):
-            maze[i][j] = randint(value_range[0], value_range[1])  # adding cost values
+            maze[i][j] = randint(10, 10 + value_range)  # adding cost values
             if random() < wall_rate:
                 maze[i][j] = -1
 
@@ -178,7 +178,7 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     return Output(failed=True)
 
 
-def animate_path(show_final_path_frames: int, maze: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False):
+def animate_path(show_final_path_frames: int, maze: list, path_color: list, explored_color: list, to_do_color: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False):
     if type(final_path) == str:  # if final_path is a string
         return  # that being a string indicates that the algorithm failed to find a path, exit the function
     
@@ -194,16 +194,33 @@ def animate_path(show_final_path_frames: int, maze: list, final_path: list, path
     display_array = numpy.array(maze)
 
     graph = plt.imshow(display_array)  # add the array to the window
-    
-    show_final_path_frame = 0
-    
+
+
+    # color the maze
+    max_value_in_maze = max(unzip(maze))
+    min_value_in_maze = min(unzip(maze))
+    for i in range(len(maze)):
+        for j in range(len(maze[i])):
+            current_value = maze[i][j]
+
+            if maze[i][j] == -1:
+                maze[i][j] = [0, 0, 0]
+            else:
+                maze[i][j] = (current_value - min_value_in_maze) / (max_value_in_maze - min_value_in_maze)
+
+                maze[i][j] = int(maze[i][j] * 128 + 127)
+                maze[i][j] = [maze[i][j], maze[i][j], maze[i][j]]
+
+    grid_print(maze)
+
+
     def animate(i):
         display_array = numpy.array(maze)  # reset display_array
 
         if i >= len(path_history):  # if it's on the last frame of the animation
             # show the final path
             for node in final_path:  # for each node in the final path
-                display_array[node] = 7
+                display_array[node] = path_color
             # hold the animation on the last frame so that the final path is visible
             pass
             
@@ -221,11 +238,11 @@ def animate_path(show_final_path_frames: int, maze: list, final_path: list, path
         # pos = (1, 1)
         # display_array[pos] = display_array[pos] - 1
         for node in explored_history[i]:  # for each explored node on the frame 'i'
-            display_array[node] = 3
+            display_array[node] = explored_color
         for node in to_do_history[i]:  # for each node in to_do on frame 'i'
-            display_array[node] = 5
+            display_array[node] = to_do_color
         for node in path_history[i]:  # for each node in the path of frame 'i'
-            display_array[node] = 7
+            display_array[node] = path_color
         
         
         graph.set_data(display_array)
@@ -252,15 +269,18 @@ def calculate_path_cost(maze, path):
 
 maze_x = 7
 maze_y = 7
-maze_value_range = (10, 10)
-maze_wall_rate = 0.4
+maze_value_range = 10  # int showing the amount of different values that can appear on the maze
+maze_wall_rate = 0.3
 
 starting_position = (0, 0)
 goal_position = (maze_y-1, maze_x-1)
 
 animation_save_files = True
 animation_show_final_path_frames = 10
-animation_fps = 5
+animation_fps = 10
+animation_path_color = [238, 255, 13]
+animation_explored_color = [85, 208, 230]
+animation_to_do_color = [115, 227, 113]
 
 # arguments ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
@@ -289,6 +309,6 @@ elapsed = time() - start
 if not output.failed:
     print(f"elapsed: {elapsed}s")
     
-    animate_path(maze=output.maze, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps)
+    animate_path(maze=output.maze, path_color=animation_path_color, explored_color=animation_explored_color, to_do_color=animation_to_do_color, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps)
 else:
     print("Pathfinding failed :(")
