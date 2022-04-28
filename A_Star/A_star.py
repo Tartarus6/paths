@@ -3,12 +3,26 @@ from random import random, randint
 import matplotlib.pyplot as plt
 from time import time, sleep
 from matplotlib.animation import FuncAnimation
+import imageio
 # note: "node" refers to a position on the maze
 # note: the value of a node is the cost that it takes to get there, so lower cost is better
 # note: any code with "# non-resilient", and probably some more, will need to be changed for any major change in the pathfinding such as adding walls or changing the maze shape
 
 
 # written based off of the pseudocode at "https://en.wikipedia.org/wiki/A*_search_algorithm"
+
+
+def make_gif(frame_folder, fps, num_frames):
+    print("gif")
+    
+    giffile = 'gif.gif'
+    
+    images_data = []
+    for i in range(num_frames):
+        data = imageio.imread(f'gif_folder/frame_{i}.jpg')
+        images_data.append(data)
+    
+    imageio.mimwrite(giffile, images_data, format='.gif', fps=fps)
 
 
 def grid_print(grid):  # non-resilient
@@ -184,10 +198,6 @@ def animate_path(show_final_path_frames: int, maze: list, path_color: list, expl
     
     if len(path_history) != len(to_do_history):  # if the lengths of ant of the history lists are different
         return  # something went wrong, just exit
-    
-    if save_files:
-        import os
-        from make_gif import make_gif
 
     fig, ax = plt.subplots()  # initialising plot
 
@@ -210,9 +220,6 @@ def animate_path(show_final_path_frames: int, maze: list, path_color: list, expl
 
                 maze[i][j] = int(maze[i][j] * 128 + 127)
                 maze[i][j] = [maze[i][j], maze[i][j], maze[i][j]]
-
-    grid_print(maze)
-
 
     def animate(i):
         display_array = numpy.array(maze)  # reset display_array
@@ -267,17 +274,17 @@ def calculate_path_cost(maze, path):
 
 # arguments ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-maze_x = 7
-maze_y = 7
-maze_value_range = 10  # int showing the amount of different values that can appear on the maze
-maze_wall_rate = 0.3
+maze_x = 25
+maze_y = 25
+maze_value_range = 0  # int showing the amount of different values that can appear on the maze
+maze_wall_rate = 0.4
 
 starting_position = (0, 0)
 goal_position = (maze_y-1, maze_x-1)
 
 animation_save_files = True
 animation_show_final_path_frames = 10
-animation_fps = 10
+animation_fps = 45
 animation_path_color = [238, 255, 13]
 animation_explored_color = [85, 208, 230]
 animation_to_do_color = [115, 227, 113]
@@ -291,13 +298,13 @@ start = time()
 maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate)
 
 
-maze = [[10, 10, 10, 10, 10, 10, 10],
+"""maze = [[10, 10, 10, 10, 10, 10, 10],
         [10, 10, 10, 10, 10, -1, 10],
         [10, 10, 10, 10, 10, -1, 10],
         [10, 10, 10, 10, 10, -1, 10],
         [10, 10, 10, 10, 10, -1, 10],
         [10, -1, -1, -1, -1, -1, 10],
-        [10, 10, 10, 10, 10, 10, 10]]
+        [10, 10, 10, 10, 10, 10, 10]]"""
 
 
 output = a_star(maze=maze, starting_position=starting_position, goal_position=goal_position)  # non-resilient

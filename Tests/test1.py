@@ -1,28 +1,18 @@
-import numpy
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+maze = [[1, 2, 4, 7, 1, 6],
+        [3, 5, 8, 2, 7, 2],
+        [6, 9, 3, 8, 3, 7],
+        [0, 4, 9, 4, 8, 1],
+        [5, 0, 5, 9, 2, 4],
+        [1, 6, 0, 3, 5, 6]]
+
+path = [(0, 0), (1, 0), (2, 0), (3, 0)]
 
 
-fig, ax = plt.subplots()  # initialising plot
-
-maze = [[10, 10, 10, 10, 10, 10],
-        [10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, -1, 10],
-        [10, -1, -1, -1, -1, 10],
-        [10, 10, 10, 10, 10, 10]]
-
-display_array = numpy.array(maze)
-
-graph = plt.imshow(display_array)  # add the array to the window
+def path_cost(maze, path):
+    total = 0
+    for i in path:
+        total += maze[i[0]][i[1]]
+    return total
 
 
-def animate(i):
-    pos = (1, 1)
-    display_array[pos] = display_array[pos] - 1
-    graph.set_data(display_array)
-    return fig
-
-
-ani = animation.FuncAnimation(fig, animate, frames=100, interval=50)
-plt.show()
+print(path_cost(maze, path))

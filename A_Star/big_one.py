@@ -3,12 +3,26 @@ from random import random, randint
 import matplotlib.pyplot as plt
 from time import time, sleep
 from matplotlib.animation import FuncAnimation
+import imageio
 # note: "node" refers to a position on the maze
 # note: the value of a node is the cost that it takes to get there, so lower cost is better
 # note: any code with "# non-resilient", and probably some more, will need to be changed for any major change in the pathfinding such as adding walls or changing the maze shape
 
 
 # written based off of the pseudocode at "https://en.wikipedia.org/wiki/A*_search_algorithm"
+
+
+def make_gif(frame_folder, fps, num_frames):
+    print("gif")
+    
+    giffile = 'gif.gif'
+    
+    images_data = []
+    for i in range(num_frames):
+        data = imageio.imread(f'gif_folder/frame_{i}.jpg')
+        images_data.append(data)
+    
+    imageio.mimwrite(giffile, images_data, format='.gif', fps=fps)
 
 
 def grid_print(grid):  # non-resilient
@@ -24,14 +38,14 @@ def unzip(lst):  # yields the contents of the input list, removing nested lists.
             yield i
 
 
-def make_maze(x: int, y: int, value_range: int, wall_rate: float):
+def make_maze(x: int, y: int, value_range: int, wall_rate: float, starting_position: tuple, ending_position: tuple):
     maze = [[0 for i in range(x)] for j in range(y)]  # initialising array of zeros
 
     # adding values to the array
     for i in range(len(maze)):
         for j in range(len(maze[i])):
             maze[i][j] = randint(10, 10 + value_range)  # adding cost values
-            if random() < wall_rate:
+            if random() < wall_rate and ((i, j) != starting_position and (i, j) != ending_position):
                 maze[i][j] = -1
 
     return maze
@@ -39,8 +53,6 @@ def make_maze(x: int, y: int, value_range: int, wall_rate: float):
 
 def manual_maze(input):
     l = input.split('\n')
-
-    print(l)
 
     for i in range(len(l)):
         l[i] = [int(i) for i in l[i]]
@@ -50,10 +62,6 @@ def manual_maze(input):
 
 def a_star(maze, starting_position: tuple, goal_position: tuple):
     print("run")
-    
-    # maze start and end can't be walls
-    maze[starting_position[0]][starting_position[1]] = 10
-    maze[goal_position[0]][goal_position[1]] = 10
     
     
     class Output:
@@ -75,7 +83,7 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
         unzipped_maze = list(unzip(maze))
         # average_value = sum(list(unzipped_maze)) / len(unzipped_maze)
 
-        average_value = 3
+        average_value = 2
         
         # estimating moves needed to get to goal
         # assumes no walls or obstructions
@@ -193,16 +201,12 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     return Output(failed=True)
 
 
-def animate_path(show_final_path_frames: int, maze: list, path_color: list, explored_color: list, to_do_color: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False):
+def animate_path(show_final_path_frames: int, maze: list, path_color: list, explored_color: list, to_do_color: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False, gif_frame_skip=1):
     if type(final_path) == str:  # if final_path is a string
         return  # that being a string indicates that the algorithm failed to find a path, exit the function
     
     if len(path_history) != len(to_do_history):  # if the lengths of ant of the history lists are different
         return  # something went wrong, just exit
-    
-    if save_files:
-        import os
-        from make_gif import make_gif
 
     fig, ax = plt.subplots()  # initialising plot
 
@@ -241,9 +245,10 @@ def animate_path(show_final_path_frames: int, maze: list, path_color: list, expl
             
             # save frame
             if save_files:
-                plt.savefig(f"gif_folder/frame_{i}.jpg")
+                if not i % gif_frame_skip:
+                    plt.savefig(f"gif_folder/frame_{i//gif_frame_skip}.jpg")
                 if i == len(path_history) + show_final_path_frames - 1:  # if it's on the final frame of the animation
-                    make_gif("gif_folder", fps=fps, num_frames=i+1)
+                    make_gif("gif_folder", fps=fps, num_frames=(i+1)//gif_frame_skip)
             return fig
             
         
@@ -260,36 +265,38 @@ def animate_path(show_final_path_frames: int, maze: list, path_color: list, expl
         graph.set_data(display_array)
         
         # save frame
-        if save_files:
-            plt.savefig(f"gif_folder/frame_{i}.jpg")
+        if save_files and not i % gif_frame_skip:
+            plt.savefig(f"gif_folder/frame_{i//gif_frame_skip}.jpg")
         return fig
     
 
-    ani = FuncAnimation(fig, animate, frames=len(path_history) + show_final_path_frames, interval=1000//fps)
+    ani = FuncAnimation(fig, animate, frames=len(path_history) + show_final_path_frames, interval=0)
     plt.show()
 
 
 def calculate_path_cost(maze, path):
+    
     # non-resilient
-    total_cost = 0
-    for position in path:
-        total_cost += maze[position[0]][position[1]]
-    return total_cost
+    total = 0
+    for i in path[1:]:
+        total += maze[i[0]][i[1]]
+    return total
 
 
 # arguments ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-maze_x = 10
-maze_y = 10
+maze_x = 100
+maze_y = 100
 maze_value_range = 10  # int showing the amount of different values that can appear on the maze
 maze_wall_rate = 0.3
 
 starting_position = (0, 0)
 goal_position = (maze_y-1, maze_x-1)
 
-animation_save_files = False
-animation_show_final_path_frames = 1000000
-animation_fps = 10
+animation_save_files = True
+animation_show_final_path_frames = 500
+animation_fps = 30
+animation_gif_frame_skip = 30  # how many frames of the original animation per gif frame (used to save space)
 animation_path_color = [238, 255, 13]
 animation_explored_color = [85, 208, 230]
 animation_to_do_color = [115, 227, 113]
@@ -300,7 +307,7 @@ animation_to_do_color = [115, 227, 113]
 start = time()
 
 
-maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate)
+maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate, starting_position=starting_position, ending_position=goal_position)
 
 
 maze = manual_maze("""3389468957195191621612774424781291213569193831469897426487912119997336538328929529524567932999764397
@@ -405,6 +412,7 @@ maze = manual_maze("""3389468957195191621612774424781291213569193831469897426487
 2865692499363943591911977961231313686973849878387599963859497937346925669637729745891898997393123146""")
 
 
+
 output = a_star(maze=maze, starting_position=starting_position, goal_position=goal_position)  # non-resilient
 
 elapsed = time() - start
@@ -416,6 +424,6 @@ if not output.failed:
 
     print(f'cost: {calculate_path_cost(maze, output.final_path)}')
     
-    animate_path(maze=output.maze, path_color=animation_path_color, explored_color=animation_explored_color, to_do_color=animation_to_do_color, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps)
+    animate_path(maze=output.maze, path_color=animation_path_color, explored_color=animation_explored_color, to_do_color=animation_to_do_color, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps, gif_frame_skip=animation_gif_frame_skip)
 else:
     print("Pathfinding failed :(")
