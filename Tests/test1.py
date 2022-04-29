@@ -1,18 +1,52 @@
-maze = [[1, 2, 4, 7, 1, 6],
-        [3, 5, 8, 2, 7, 2],
-        [6, 9, 3, 8, 3, 7],
-        [0, 4, 9, 4, 8, 1],
-        [5, 0, 5, 9, 2, 4],
-        [1, 6, 0, 3, 5, 6]]
-
-path = [(0, 0), (1, 0), (2, 0), (3, 0)]
+from copy import copy
 
 
-def path_cost(maze, path):
-    total = 0
-    for i in path:
-        total += maze[i[0]][i[1]]
-    return total
+def grid_print(grid):  # non-resilient
+    for i in grid:
+        print(i)
+    print()
 
 
-print(path_cost(maze, path))
+maze = [[1, 1],
+        [1, 1]]
+
+
+def full_map(grid):
+    full = []
+
+    temp_map = []
+    for i in range(len(grid)):
+        temp_map.append(copy(grid[i]))
+
+    def increment_map(map):
+        for i in range(len(map)):
+            for j in range(len(map[i])):
+                map[i][j] = (map[i][j] + 1) % 9
+
+        return map
+
+
+    for i in range(5):
+        for j in temp_map:
+            full.append(copy(j))
+        temp_map = increment_map(temp_map)
+
+    temp_map = []
+    for i in range(len(grid)):
+        temp_map.append(copy(grid[i]))
+
+    for i in range(1, 5):
+        temp_map = increment_map(temp_map)
+        for j in range(len(temp_map)):
+            for k in range(len(temp_map[j])):
+                full[j].append(temp_map[k][j])
+
+
+    return full
+
+
+new = full_map(maze)
+
+print('\n\n\n\n')
+print(f'final grid:')
+grid_print(new)
