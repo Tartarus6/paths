@@ -274,8 +274,8 @@ def calculate_path_cost(maze, path):
 
 # arguments ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-maze_x = 25
-maze_y = 25
+maze_x = 20
+maze_y = 20
 maze_value_range = 0  # int showing the amount of different values that can appear on the maze
 maze_wall_rate = 0.4
 
@@ -284,7 +284,7 @@ goal_position = (maze_y-1, maze_x-1)
 
 animation_save_files = True
 animation_show_final_path_frames = 10
-animation_fps = 45
+animation_fps = 2
 animation_path_color = [238, 255, 13]
 animation_explored_color = [85, 208, 230]
 animation_to_do_color = [115, 227, 113]
@@ -295,16 +295,16 @@ animation_to_do_color = [115, 227, 113]
 start = time()
 
 
-maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate)
+# maze = make_maze(x=maze_x, y=maze_y, value_range=maze_value_range, wall_rate=maze_wall_rate)
 
 
-"""maze = [[10, 10, 10, 10, 10, 10, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, 10, 10, 10, 10, -1, 10],
-        [10, -1, -1, -1, -1, -1, 10],
-        [10, 10, 10, 10, 10, 10, 10]]"""
+maze = make_maze(maze_x, maze_y, maze_value_range, maze_wall_rate)
+
+with open('readme.txt', 'w') as f:
+    for i in maze:
+        for j in i:
+            f.write(str(j) + " ")
+        f.write("end\n")
 
 
 output = a_star(maze=maze, starting_position=starting_position, goal_position=goal_position)  # non-resilient

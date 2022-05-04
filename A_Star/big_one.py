@@ -83,7 +83,7 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
         unzipped_maze = list(unzip(maze))
         # average_value = sum(list(unzipped_maze)) / len(unzipped_maze)
 
-        average_value = 2
+        average_value = 2.5
         
         # estimating moves needed to get to goal
         # assumes no walls or obstructions
@@ -201,7 +201,7 @@ def a_star(maze, starting_position: tuple, goal_position: tuple):
     return Output(failed=True)
 
 
-def animate_path(show_final_path_frames: int, maze: list, path_color: list, explored_color: list, to_do_color: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False, gif_frame_skip=1):
+def animate_path(show_final_path_frames: int, maze: list, path_color: list, explored_color: list, to_do_color: list, final_path: list, path_history: list, to_do_history: list, explored_history: list, fps: float, save_files=False, gif_frame_skip=1, frame_skip=0):
     if type(final_path) == str:  # if final_path is a string
         return  # that being a string indicates that the algorithm failed to find a path, exit the function
     
@@ -231,27 +231,26 @@ def animate_path(show_final_path_frames: int, maze: list, path_color: list, expl
                 maze[i][j] = [maze[i][j], maze[i][j], maze[i][j]]
 
     def animate(i):
+        i *= frame_skip
+        
         display_array = numpy.array(maze)  # reset display_array
-
+    
         if i >= len(path_history):  # if it's on the last frame of the animation
             # show the final path
             for node in final_path:  # for each node in the final path
                 display_array[node] = path_color
             # hold the animation on the last frame so that the final path is visible
             pass
-            
-
+        
             graph.set_data(display_array)
-            
+        
             # save frame
             if save_files:
-                if not i % gif_frame_skip:
-                    plt.savefig(f"gif_folder/frame_{i//gif_frame_skip}.jpg")
-                if i == len(path_history) + show_final_path_frames - 1:  # if it's on the final frame of the animation
-                    make_gif("gif_folder", fps=fps, num_frames=(i+1)//gif_frame_skip)
+                plt.savefig(f"gif_folder/frame_{i}.jpg")
+                if (i/frame_skip) == len(path_history) + show_final_path_frames - 1:  # if it's on the final frame of the animation
+                    make_gif("gif_folder", fps=fps, num_frames=i + 1)
             return fig
-            
-        
+    
         # pos = (1, 1)
         # display_array[pos] = display_array[pos] - 1
         for node in explored_history[i]:  # for each explored node on the frame 'i'
@@ -260,6 +259,12 @@ def animate_path(show_final_path_frames: int, maze: list, path_color: list, expl
             display_array[node] = to_do_color
         for node in path_history[i]:  # for each node in the path of frame 'i'
             display_array[node] = path_color
+    
+        graph.set_data(display_array)
+    
+        # save frame
+        if save_files:
+            plt.savefig(f"gif_folder/frame_{i}.jpg")
         
         
         graph.set_data(display_array)
@@ -293,9 +298,10 @@ maze_wall_rate = 0.3
 starting_position = (0, 0)
 goal_position = (maze_y-1, maze_x-1)
 
-animation_save_files = True
-animation_show_final_path_frames = 500
+animation_save_files = False
+animation_show_final_path_frames = 120
 animation_fps = 30
+animation_frame_skip = 10
 animation_gif_frame_skip = 30  # how many frames of the original animation per gif frame (used to save space)
 animation_path_color = [238, 255, 13]
 animation_explored_color = [85, 208, 230]
@@ -411,7 +417,11 @@ maze = manual_maze("""3389468957195191621612774424781291213569193831469897426487
 1889273619911397689813219925751671129554482532979374999962138151188171289238825995754135581779326797
 2865692499363943591911977961231313686973849878387599963859497937346925669637729745891898997393123146""")
 
-
+with open('readme.txt', 'w') as f:
+    for i in maze:
+        for j in i:
+            f.write(str(j) + " ")
+        f.write("end\n")
 
 output = a_star(maze=maze, starting_position=starting_position, goal_position=goal_position)  # non-resilient
 
@@ -424,6 +434,6 @@ if not output.failed:
 
     print(f'cost: {calculate_path_cost(maze, output.final_path)}')
     
-    animate_path(maze=output.maze, path_color=animation_path_color, explored_color=animation_explored_color, to_do_color=animation_to_do_color, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps, gif_frame_skip=animation_gif_frame_skip)
+    animate_path(maze=output.maze, path_color=animation_path_color, explored_color=animation_explored_color, to_do_color=animation_to_do_color, final_path=output.final_path, path_history=output.path_history, to_do_history=output.to_do_history, explored_history=output.explored_history, save_files=animation_save_files, show_final_path_frames=animation_show_final_path_frames, fps=animation_fps, gif_frame_skip=animation_gif_frame_skip, frame_skip=animation_frame_skip)
 else:
     print("Pathfinding failed :(")
